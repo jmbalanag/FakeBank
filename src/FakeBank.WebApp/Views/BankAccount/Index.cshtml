@@ -18,6 +18,9 @@
                 <th>
                     @Html.DisplayNameFor(model => model.AccountName)
                 </th>
+            <th>
+                Balance
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -31,9 +34,14 @@
                 @Html.DisplayFor(modelItem => item.AccountName)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @Html.DisplayFor(modelItem => item.Balance)
+            </td>
+            <td>
+
+                <a asp-action="Deposit" asp-route-id="@item.Id">Deposit</a> |
+                <a asp-action="Withdraw" asp-route-id="@item.Id">Withdraw</a> |
+                <a asp-action="Transfer" asp-route-id="@item.Id">Transfer</a> |
+                <a asp-action="Transaction" asp-route-id="@item.Id">Transaction History</a>
             </td>
         </tr>
 }

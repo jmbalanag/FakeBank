@@ -9,8 +9,8 @@ namespace FakeBank.WebApp.Models.AccountViewModels
     public class LoginViewModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        [Display(Name = "ACCOUNT NUMBER")]
+        public string AccountNumber { get; set; }
 
         [Required]
         [DataType(DataType.Password)]

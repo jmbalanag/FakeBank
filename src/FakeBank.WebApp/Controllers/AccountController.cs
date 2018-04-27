@@ -67,7 +67,7 @@ namespace FakeBank.WebApp.Controllers
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(model.AccountNumber, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -226,7 +226,7 @@ namespace FakeBank.WebApp.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.AccountName, Email = model.AccountName };
+                var user = new ApplicationUser { UserName = model.AccountName, Email = model.AccountNumber };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -239,8 +239,14 @@ namespace FakeBank.WebApp.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
 
                     //create inital account for the registered user
-                    Account account = Account.CreateAccount(UserId, model.AccountNumber, model.AccountName);
+                    Account account = Account.CreateAccount(Guid.Parse(user.Id), model.AccountNumber, model.AccountName);
                     account.Deposit(model.Balance, "Starting Balance");
+
+                    _context.Add(account);
+                    _context.AddRange(account.AccountTransactions);
+                    _context.SaveChanges();
+
+
 
                     _logger.LogInformation("User created a new account with password.");
                     return RedirectToLocal(returnUrl);

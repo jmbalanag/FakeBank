@@ -5,6 +5,8 @@ namespace FakeBank.Domain.Entities.Accounts
 {
     public class Transaction 
     {
+        public Transaction() { }
+
         [Key]
         public Guid Id { get; private set; }
         public DateTime Date { get; private set; }
@@ -12,10 +14,11 @@ namespace FakeBank.Domain.Entities.Accounts
         public string AccountNumber { get; private set; }
         public string Remarks { get; private set; }
         public TransactionType TransactionType { get; private set; }
-
-        public Transaction(TransactionType transactionType, decimal amount, string reciever, string remarks)
+        public Guid AccountId { get; set; }
+        public Transaction(Guid accountId, TransactionType transactionType, decimal amount, string reciever, string remarks)
         {
             Id = Guid.NewGuid();
+            AccountId = accountId;
             Date = DateTime.Now;
             TransactionType = transactionType;
             Amount = amount;

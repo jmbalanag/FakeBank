@@ -8,10 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using FakeBank.Domain.Entities.Accounts;
 using FakeBank.WebApp.Data;
 using FakeBank.WebApp.Models.BankAccountViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FakeBank.WebApp.Controllers
 {
      
+    [Authorize]
     public class BankAccountController : BaseController
     {
         private readonly ApplicationDbContext _context;
@@ -27,6 +29,16 @@ namespace FakeBank.WebApp.Controllers
             ViewBag.UserName = UserName;
 
             return View(await _context.Accounts.Where(x => x.UserId == UserId).ToListAsync());
+        }
+
+        public async Task<IActionResult> Transaction(Guid Id)
+        {
+            var model = from s in _context.Accounts
+                        join p in _context.Transactions on s.Id equals p.AccountId
+                        where s.UserId == UserId
+                        select p;
+
+            return View(model.OrderByDescending(x => x.Date));
         }
 
         // GET: BankAccount/Details/5
@@ -94,7 +106,7 @@ namespace FakeBank.WebApp.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Deposit(Guid id, [Bind("Id,AccountNumber,AccountName")] Account account)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,AccountNumber,AccountName")] Account account)
         {
             if (id != account.Id)
             {

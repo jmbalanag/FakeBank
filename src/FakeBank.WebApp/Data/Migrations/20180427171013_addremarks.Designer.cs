@@ -12,9 +12,10 @@ using System;
 namespace FakeBank.WebApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180427171013_addremarks")]
+    partial class addremarks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,8 +31,6 @@ namespace FakeBank.WebApp.Data.Migrations
 
                     b.Property<string>("AccountNumber");
 
-                    b.Property<decimal>("Balance");
-
                     b.Property<Guid>("UserId");
 
                     b.HasKey("Id");
@@ -44,7 +43,7 @@ namespace FakeBank.WebApp.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid>("AccountId");
+                    b.Property<Guid?>("AccountId");
 
                     b.Property<string>("AccountNumber");
 
@@ -226,8 +225,7 @@ namespace FakeBank.WebApp.Data.Migrations
                 {
                     b.HasOne("FakeBank.Domain.Entities.Accounts.Account")
                         .WithMany("AccountTransactions")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("AccountId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

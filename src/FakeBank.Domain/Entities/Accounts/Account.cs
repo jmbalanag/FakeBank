@@ -23,7 +23,7 @@ namespace FakeBank.Domain.Entities.Accounts
         public Guid Id { get; private set; }
         public string AccountNumber { get; private set; }
         public string AccountName { get; private set; }
-        private decimal Balance { get; set; }
+        public decimal Balance { get; set; }
 
 
         public static Account CreateAccount(Guid userId, string accountNumber, string accountName)
@@ -36,6 +36,8 @@ namespace FakeBank.Domain.Entities.Accounts
                 AccountNumber = accountNumber,
                 Balance = 0
             };
+
+            account.AccountTransactions = new List<Transaction>();
 
             return account;
         }
@@ -53,6 +55,8 @@ namespace FakeBank.Domain.Entities.Accounts
             AccountNumber = accountNumber;
             AccountName = accountName;
             Balance = balance;
+
+            AccountTransactions = new List<Transaction>();
         }
 
        
@@ -109,7 +113,7 @@ namespace FakeBank.Domain.Entities.Accounts
 
         private void AddTransactionHistory(TransactionType transactionType, decimal amount, string remarks = "", string accountNumberReceiver = "")
         {
-            Transaction trans = new Transaction(transactionType, amount, accountNumberReceiver, remarks);
+            Transaction trans = new Transaction(Id, transactionType, amount, accountNumberReceiver, remarks);
 
             if (transactionType == TransactionType.Transfer)
             {
