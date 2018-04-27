@@ -13,13 +13,17 @@ using Microsoft.Extensions.Options;
 using FakeBank.WebApp.Models;
 using FakeBank.WebApp.Models.AccountViewModels;
 using FakeBank.WebApp.Services;
+using FakeBank.WebApp.Data;
+using FakeBank.Domain.Entities.Accounts;
 
 namespace FakeBank.WebApp.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
+        private readonly ApplicationDbContext _context;
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
@@ -29,11 +33,13 @@ namespace FakeBank.WebApp.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
+            ApplicationDbContext context,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _context = context;
             _logger = logger;
         }
 
@@ -220,7 +226,7 @@ namespace FakeBank.WebApp.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.AccountName, Email = model.AccountName };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -228,9 +234,14 @@ namespace FakeBank.WebApp.Controllers
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-                    await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
+                    //await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    //create inital account for the registered user
+                    Account account = Account.CreateAccount(UserId, model.AccountNumber, model.AccountName);
+                    account.Deposit(model.Balance, "Starting Balance");
+
                     _logger.LogInformation("User created a new account with password.");
                     return RedirectToLocal(returnUrl);
                 }

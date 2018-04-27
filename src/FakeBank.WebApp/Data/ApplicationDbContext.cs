@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using FakeBank.WebApp.Models;
+using FakeBank.Domain.Entities.Accounts;
 
 namespace FakeBank.WebApp.Data
 {
@@ -14,7 +15,8 @@ namespace FakeBank.WebApp.Data
             : base(options)
         {
         }
-
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

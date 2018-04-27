@@ -5,3 +5,10 @@
 <h3>@ViewData["Message"]</h3>
 
 <p>Use this area to provide additional information.</p>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div>My Accounts</div>
+
+    
+}
