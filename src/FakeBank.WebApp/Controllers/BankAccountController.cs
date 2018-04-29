@@ -122,6 +122,11 @@ namespace FakeBank.WebApp.Controllers
                     }
                     else if (account.TransactionTypeId == TransactionType.Withdraw)
                     {
+                        if(record.Balance < account.Amount)
+                        {
+                            ModelState.AddModelError("", "Amount cannot exceed balance.");
+                            return View(account);
+                        }
                         record.Withdraw(account.Amount);
                     }
 
@@ -231,6 +236,12 @@ namespace FakeBank.WebApp.Controllers
                     if (record == null)
                     {
                         ModelState.AddModelError("", "Depositor account not found.");
+                        return View(account);
+                    }
+
+                    if (record.Balance < account.Amount)
+                    {
+                        ModelState.AddModelError("Amount", "Amount cannot exceed Balance.");
                         return View(account);
                     }
 
