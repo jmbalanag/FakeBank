@@ -6,8 +6,8 @@ namespace FakeBank.Domain.Entities.Accounts
 {
     public enum TransactionType
     {
-        Withdraw = 1,
-        Deposit = 2,
+        Deposit = 1,
+        Withdraw = 2,
         Transfer = 3
     }
 }

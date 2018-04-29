@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FakeBank.WebApp.Controllers
 {
-     
+
     [Authorize]
     public class BankAccountController : BaseController
     {
@@ -35,29 +35,12 @@ namespace FakeBank.WebApp.Controllers
         {
             var model = from s in _context.Accounts
                         join p in _context.Transactions on s.Id equals p.AccountId
-                        where s.UserId == UserId
+                        where s.UserId == UserId && s.Id == Id
                         select p;
 
             return View(model.OrderByDescending(x => x.Date));
         }
-
-        // GET: BankAccount/Details/5
-        public async Task<IActionResult> Details(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var account = await _context.Accounts
-                .SingleOrDefaultAsync(m => m.Id == id);
-            if (account == null)
-            {
-                return NotFound();
-            }
-
-            return View(account);
-        }
+ 
 
         // GET: BankAccount/Create
         public IActionResult Create()
@@ -86,8 +69,11 @@ namespace FakeBank.WebApp.Controllers
         }
 
         // GET: BankAccount/Edit/5
-        public async Task<IActionResult> Deposit(Guid? id)
+        public async Task<IActionResult> Transact(Guid? id, TransactionType transactionTypeId)
         {
+            ViewBag.TransactionType = transactionTypeId.ToString();
+
+
             if (id == null)
             {
                 return NotFound();
@@ -98,76 +84,62 @@ namespace FakeBank.WebApp.Controllers
             {
                 return NotFound();
             }
-            return View(account);
+
+            AccountTransactionViewModel model = new AccountTransactionViewModel()
+            {
+                Id = account.Id,
+                TransactionTypeId = transactionTypeId
+            };
+
+            return View(model);
         }
+
 
         // POST: BankAccount/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,AccountNumber,AccountName")] Account account)
+        public async Task<IActionResult> Transact(Guid id, [Bind("Id,Amount, TransactionTypeId")] AccountTransactionViewModel account)
         {
-            if (id != account.Id)
-            {
-                return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(account);
+                    var record = _context.Accounts.Find(id);
+
+                    if (account.TransactionTypeId == TransactionType.Deposit)
+                    {
+                        record.Deposit(account.Amount, "");
+                    }
+                    else if (account.TransactionTypeId == TransactionType.Withdraw)
+                    {
+                        record.Withdraw(account.Amount);
+                    }
+                    else if (account.TransactionTypeId == TransactionType.Transfer)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    _context.Update(record);
+
+                    _context.AddRange(record.AccountTransactions);
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AccountExists(account.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
+
                 }
+
                 return RedirectToAction(nameof(Index));
             }
             return View(account);
         }
 
-        // GET: BankAccount/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var account = await _context.Accounts
-                .SingleOrDefaultAsync(m => m.Id == id);
-            if (account == null)
-            {
-                return NotFound();
-            }
-
-            return View(account);
-        }
-
-        // POST: BankAccount/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
-        {
-            var account = await _context.Accounts.SingleOrDefaultAsync(m => m.Id == id);
-            _context.Accounts.Remove(account);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool AccountExists(Guid id)
-        {
-            return _context.Accounts.Any(e => e.Id == id);
-        }
+   
     }
 }

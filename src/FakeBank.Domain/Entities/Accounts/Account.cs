@@ -69,7 +69,7 @@ namespace FakeBank.Domain.Entities.Accounts
             {
                 throw new ZeroBalanceException(ZeroBalanceExceptionMessage, Id);
             }
-            if (amount < Balance)
+            if (amount > Balance)
             {
                 throw new NotEnoughBalanceException(NotEnoughBalanceExceptionMessage, Id);
             }
@@ -91,11 +91,15 @@ namespace FakeBank.Domain.Entities.Accounts
 
         public void Withdraw(decimal amount)
         {
+            AccountTransactions = new List<Transaction>();
             AssertHasEnoughBalance(amount);
             Balance -= amount;
+            AddTransactionHistory(TransactionType.Withdraw, amount);
         }
         public void Deposit(decimal amount, string remarks)
         {
+            AccountTransactions = new List<Transaction>();
+
             Balance += amount;
 
             AddTransactionHistory(TransactionType.Deposit, amount, remarks);
@@ -103,6 +107,8 @@ namespace FakeBank.Domain.Entities.Accounts
 
         public void Transfer(IAccountInfoService accountService, string accountNumberReciever, decimal amount)
         {
+            AccountTransactions = new List<Transaction>();
+
             AssertAccountFundTransferAccountExists(accountService, accountNumberReciever);
             AssertHasEnoughBalance(amount);
             Balance = Balance - amount;

@@ -38,8 +38,8 @@
             </td>
             <td>
 
-                <a asp-action="Deposit" asp-route-id="@item.Id">Deposit</a> |
-                <a asp-action="Withdraw" asp-route-id="@item.Id">Withdraw</a> |
+                <a asp-action="Transact" asp-route-id="@item.Id" asp-route-transactionTypeId="1">Deposit</a> |
+                <a asp-action="Transact" asp-route-id="@item.Id" asp-route-transactionTypeId="2">Withdraw</a> |
                 <a asp-action="Transfer" asp-route-id="@item.Id">Transfer</a> |
                 <a asp-action="Transaction" asp-route-id="@item.Id">Transaction History</a>
             </td>
