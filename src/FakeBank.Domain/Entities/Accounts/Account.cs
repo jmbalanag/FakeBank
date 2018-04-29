@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FakeBank.Domain.Entities.Accounts
 {
-    public class Account 
+    public class Account
     {
         public Account() { }
 
@@ -59,7 +59,7 @@ namespace FakeBank.Domain.Entities.Accounts
             AccountTransactions = new List<Transaction>();
         }
 
-       
+
 
         // (ID, AccountNumber, AccountName, Password, Balance, CreatedDate)
 
@@ -105,30 +105,36 @@ namespace FakeBank.Domain.Entities.Accounts
             AddTransactionHistory(TransactionType.Deposit, amount, remarks);
         }
 
-        public void Transfer(IAccountInfoService accountService, string accountNumberReciever, decimal amount)
+        public void Transfer(string accountNumberReciever, decimal amount, string remarks)
+        {
+            AccountTransactions = new List<Transaction>();
+            //  AssertAccountFundTransferAccountExists(accountService, accountNumberReciever);
+            AssertHasEnoughBalance(amount);
+            Balance -= amount;
+
+            AddTransactionHistory(TransactionType.TransferSent, amount, remarks, accountNumberReciever);
+        }
+
+
+        public void ReceiveTransfer(string accountNumberSender, decimal amount, string remarks)
         {
             AccountTransactions = new List<Transaction>();
 
-            AssertAccountFundTransferAccountExists(accountService, accountNumberReciever);
-            AssertHasEnoughBalance(amount);
-            Balance = Balance - amount;
+            Balance += amount;
+            AddTransactionHistory(TransactionType.TransferReceived, amount, remarks, accountNumberSender);
         }
-
-        
 
 
         private void AddTransactionHistory(TransactionType transactionType, decimal amount, string remarks = "", string accountNumberReceiver = "")
         {
             Transaction trans = new Transaction(Id, transactionType, amount, accountNumberReceiver, remarks);
 
-            if (transactionType == TransactionType.Transfer)
-            {
+            AccountTransactions.Add(trans);
 
-            }
-            else
-            {
-                AccountTransactions.Add(trans);
-            }
         }
+
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
     }
 }

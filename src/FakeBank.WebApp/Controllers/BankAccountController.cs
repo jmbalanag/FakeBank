@@ -40,7 +40,7 @@ namespace FakeBank.WebApp.Controllers
 
             return View(model.OrderByDescending(x => x.Date));
         }
- 
+
 
         // GET: BankAccount/Create
         public IActionResult Create()
@@ -57,7 +57,7 @@ namespace FakeBank.WebApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                Account record = Account.CreateAccount(UserId, account.AccountName, account.AccountNumber);
+                Account record = Account.CreateAccount(UserId, account.AccountNumber, account.AccountName);
 
                 _context.Add(record);
 
@@ -79,7 +79,7 @@ namespace FakeBank.WebApp.Controllers
                 return NotFound();
             }
 
-            var account = await _context.Accounts.SingleOrDefaultAsync(m => m.Id == id);
+            var account = await _context.Accounts.SingleOrDefaultAsync(m => m.Id == id && m.UserId == UserId);
             if (account == null)
             {
                 return NotFound();
@@ -107,7 +107,14 @@ namespace FakeBank.WebApp.Controllers
             {
                 try
                 {
-                    var record = _context.Accounts.Find(id);
+
+                    var record = _context.Accounts.FirstOrDefault(x => x.Id == id && x.UserId == UserId);
+
+                    if (record == null)
+                    {
+                        ModelState.AddModelError("", "Depositor account not found.");
+                        return View(account);
+                    }
 
                     if (account.TransactionTypeId == TransactionType.Deposit)
                     {
@@ -117,10 +124,7 @@ namespace FakeBank.WebApp.Controllers
                     {
                         record.Withdraw(account.Amount);
                     }
-                    else if (account.TransactionTypeId == TransactionType.Transfer)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
+
 
                     _context.Update(record);
 
@@ -140,6 +144,89 @@ namespace FakeBank.WebApp.Controllers
             return View(account);
         }
 
-   
+        public async Task<IActionResult> Transfer(Guid? id)
+        {
+            ViewBag.TransactionType = "Account Transfer";
+
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var account = await _context.Accounts.SingleOrDefaultAsync(m => m.Id == id && m.UserId == UserId);
+            if (account == null)
+            {
+                return NotFound();
+            }
+
+            AccountTransferViewModel model = new AccountTransferViewModel()
+            {
+                Id = account.Id,
+
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Transfer(Guid id, [Bind("Id,Amount, RecieverAccountNumber, Remarks")] AccountTransferViewModel account)
+        {
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var record = _context.Accounts.FirstOrDefault(x => x.Id == id && x.UserId == UserId);
+
+                    if (record == null)
+                    {
+                        ModelState.AddModelError("", "Depositor account not found.");
+                        return View(account);
+                    }
+
+                    var reciever = _context.Accounts.FirstOrDefault(x => x.AccountNumber == account.RecieverAccountNumber);
+
+                    if (reciever == null)
+                    {
+                        ModelState.AddModelError("RecieverAccountNumber", "Account Number does not exists. Please check the number and try again.");
+                        return View(account);
+                    }
+                    if (reciever.AccountNumber == record.AccountNumber)
+                    {
+                        ModelState.AddModelError("RecieverAccountNumber", "Cant Transfer to same account. Please check the number and try again.");
+                        return View(account);
+                    }
+                    else
+                    {
+
+
+                        record.Transfer(account.RecieverAccountNumber, account.Amount, account.Remarks);
+                        reciever.ReceiveTransfer(record.AccountNumber, account.Amount, account.Remarks);
+                        _context.Update(record);
+                        _context.AddRange(record.AccountTransactions);
+
+                        _context.Update(reciever);
+                        _context.AddRange(reciever.AccountTransactions);
+
+
+                        await _context.SaveChangesAsync();
+
+                    }
+
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+
+                    throw;
+
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            return View(account);
+        }
+
     }
 }

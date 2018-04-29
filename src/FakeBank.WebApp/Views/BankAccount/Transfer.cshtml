@@ -1,0 +1,48 @@
+﻿@model FakeBank.WebApp.Models.BankAccountViewModels.AccountTransferViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h2>@ViewBag.TransactionType</h2>
+
+<h4>Account</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Transfer">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group">
+                <label asp-for="RecieverAccountNumber" class="control-label"></label>
+                <input asp-for="RecieverAccountNumber" class="form-control" />
+                <span asp-validation-for="RecieverAccountNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Amount" class="control-label"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Remarks" class="control-label"></label>
+                <input asp-for="Remarks" class="form-control" />
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Continue" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

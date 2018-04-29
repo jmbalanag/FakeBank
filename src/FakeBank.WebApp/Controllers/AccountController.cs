@@ -67,7 +67,21 @@ namespace FakeBank.WebApp.Controllers
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.AccountNumber, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+                var account = _context.Accounts.FirstOrDefault(X => X.AccountNumber == model.AccountNumber);
+
+                if(account == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
+                var userProfile = _context.Users.FirstOrDefault(x => x.Id == account.UserId.ToString());
+                if (userProfile == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
+                var result = await _signInManager.PasswordSignInAsync(userProfile.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -226,6 +240,20 @@ namespace FakeBank.WebApp.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
+
+             
+                if (_context.Accounts.Any(x => x.AccountNumber == model.AccountNumber))
+                {
+                    ModelState.AddModelError("AccountNumber", "Account Number is Already in Use. Please use a different Account Number.");
+                    return View(model);
+                }
+
+                if (_context.Accounts.Any(x => x.AccountName.ToLower() == model.AccountName.ToLower()))
+                {
+                    ModelState.AddModelError("AccountName", "Account Name is Already in Use. Please use a different Account Name.");
+                    return View(model);
+                }
+
                 var user = new ApplicationUser { UserName = model.AccountName, Email = model.AccountNumber };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)

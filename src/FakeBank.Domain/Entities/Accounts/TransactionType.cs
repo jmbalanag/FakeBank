@@ -8,6 +8,7 @@ namespace FakeBank.Domain.Entities.Accounts
     {
         Deposit = 1,
         Withdraw = 2,
-        Transfer = 3
+        TransferSent = 3,
+        TransferReceived = 4
     }
 }
