@@ -132,11 +132,59 @@ namespace FakeBank.WebApp.Controllers
 
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    //this is how you get entries
+                    foreach (var entry in ex.Entries)
+                    {
+                        if (entry.Entity is Account)
+                        {
+                            if (account.TransactionTypeId == TransactionType.Withdraw)
+                            {
+                                if (_context.Accounts.Find(id).Balance < account.Amount)
+                                {
+                                    ModelState.AddModelError("Amount", "Another transaction completed while trying to complete current transsaction.");
+                                    return View(account);
+                                }
+                                else
+                                {
+                                    var retry = _context.Accounts.FirstOrDefault(x => x.Id == id && x.UserId == UserId);
+                                    retry.Withdraw(account.Amount);
+                                    _context.Update(retry);
+                                    _context.AddRange(retry.AccountTransactions);
+                                    _context.SaveChanges();
+                                }
+                                //var proposedValues = entry.CurrentValues;
+                                //var databaseValues = entry.GetDatabaseValues();
 
-                    throw;
+                                //foreach (var property in proposedValues.Properties)
+                                //{
+                                //    var proposedValue = proposedValues[property];
+                                //    var databaseValue = databaseValues[property];
 
+                                //    // TODO: decide which value should be written to database
+                                //    // proposedValues[property] = <value to be saved>;
+                                //}
+
+                                //// Refresh original values to bypass next concurrency check
+                                //entry.OriginalValues.SetValues(databaseValues);
+
+
+                            }
+                            else if (account.TransactionTypeId == TransactionType.Deposit)
+                            {
+                                var retry = _context.Accounts.FirstOrDefault(x => x.Id == id && x.UserId == UserId);
+                                retry.Deposit(account.Amount, "");
+                                _context.Update(retry);
+                                _context.AddRange(retry.AccountTransactions);
+                                _context.SaveChanges();
+
+                            }
+
+                        }
+
+
+                    }
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -218,8 +266,25 @@ namespace FakeBank.WebApp.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
+                    if (_context.Accounts.Find(id).Balance < account.Amount)
+                    {
+                        ModelState.AddModelError("Amount", "Another transaction completed while trying to complete current transsaction.");
+                        return View(account);
+                    }
+                    else
+                    {
+                        var record = _context.Accounts.FirstOrDefault(x => x.Id == id && x.UserId == UserId);
+                        var reciever = _context.Accounts.FirstOrDefault(x => x.AccountNumber == account.RecieverAccountNumber);
 
-                    throw;
+                        record.Transfer(account.RecieverAccountNumber, account.Amount, account.Remarks);
+                        reciever.ReceiveTransfer(record.AccountNumber, account.Amount, account.Remarks);
+                        _context.Update(record);
+                        _context.AddRange(record.AccountTransactions);
+
+                        _context.Update(reciever);
+                        _context.AddRange(reciever.AccountTransactions);
+                        await _context.SaveChangesAsync();
+                    }
 
                 }
 
