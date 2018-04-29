@@ -41,24 +41,7 @@ namespace FakeBank.Domain.Entities.Accounts
 
             return account;
         }
-
-        /// <summary>
-        /// Used to reconstruct Account
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="accountNumber"></param>
-        /// <param name="accountName"></param>
-        /// <param name="balance"></param>
-        public Account(Guid id, string accountNumber, string accountName, decimal balance)
-        {
-            Id = id;
-            AccountNumber = accountNumber;
-            AccountName = accountName;
-            Balance = balance;
-
-            AccountTransactions = new List<Transaction>();
-        }
-
+ 
 
 
         // (ID, AccountNumber, AccountName, Password, Balance, CreatedDate)
@@ -91,14 +74,19 @@ namespace FakeBank.Domain.Entities.Accounts
 
         public void Withdraw(decimal amount)
         {
-            AccountTransactions = new List<Transaction>();
+       
+
             AssertHasEnoughBalance(amount);
             Balance -= amount;
             AddTransactionHistory(TransactionType.Withdraw, amount);
         }
         public void Deposit(decimal amount, string remarks)
         {
-            AccountTransactions = new List<Transaction>();
+            if(amount < 0)
+            {
+                throw new Exception("Amount cannot be less than zero");
+            }
+     
 
             Balance += amount;
 
@@ -107,7 +95,8 @@ namespace FakeBank.Domain.Entities.Accounts
 
         public void Transfer(string accountNumberReciever, decimal amount, string remarks)
         {
-            AccountTransactions = new List<Transaction>();
+       
+
             //  AssertAccountFundTransferAccountExists(accountService, accountNumberReciever);
             AssertHasEnoughBalance(amount);
             Balance -= amount;
@@ -118,7 +107,8 @@ namespace FakeBank.Domain.Entities.Accounts
 
         public void ReceiveTransfer(string accountNumberSender, decimal amount, string remarks)
         {
-            AccountTransactions = new List<Transaction>();
+          
+
 
             Balance += amount;
             AddTransactionHistory(TransactionType.TransferReceived, amount, remarks, accountNumberSender);
@@ -127,6 +117,12 @@ namespace FakeBank.Domain.Entities.Accounts
 
         private void AddTransactionHistory(TransactionType transactionType, decimal amount, string remarks = "", string accountNumberReceiver = "")
         {
+            if (AccountTransactions == null)
+            {
+                AccountTransactions = new List<Transaction>();
+            }
+
+
             Transaction trans = new Transaction(Id, transactionType, amount, accountNumberReceiver, remarks);
 
             AccountTransactions.Add(trans);
